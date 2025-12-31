@@ -234,15 +234,20 @@
   }
 
   function updateRevealScreen() {
-    const playerNumber = current + 1;
-    roundInfo.textContent = `Jugador ${playerNumber} de ${N}`;
-    roundProgress.textContent = `${current} vistos`;
+  const playerNumber = current + 1;
+  roundInfo.textContent = `Jugador ${playerNumber} de ${N}`;
+  roundProgress.textContent = `${current} vistos`;
 
-    prompt.textContent = `Jugador ${playerNumber}`;
-    bigText.textContent = "Tocá para revelar";
-    hint.textContent = "Asegurate de que nadie más mire 👀";
-    revealed = false;
-  }
+  prompt.textContent = `Jugador ${playerNumber}`;
+  bigText.textContent = "Tocá para revelar";
+  hint.textContent = "Asegurate de que nadie más mire 👀";
+
+  revealed = false;
+
+  // Estado por defecto al pasar de jugador
+  btnHide.disabled = true;
+  btnNext.disabled = true;
+}
 
   function revealRole() {
     if (revealed) return;
