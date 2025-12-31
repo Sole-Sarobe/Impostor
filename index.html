@@ -128,7 +128,29 @@
     "Computadora","Celular","Tablet","Televisión","Radio","Cámara","Reloj","Auriculares","Impresora","Router",
     "Película","Serie","Libro","Comic","Videojuego","Canción","Banda","Actor","Directora","Podcast",
     "Doctor","Enfermera","Profesor","Panadero","Mecánico","Programador","Diseñadora","Electricista","Arquitecto","Abogada",
-    "Semáforo","Puente","Ruta","Peaje","Rotonda","Estacionamiento","Parada","Terminal","Mapa","GPS"
+    "Semáforo","Puente","Ruta","Peaje","Rotonda","Estacionamiento","Parada","Terminal","Mapa","GPS",
+    "Relojería","Panadería","Carnicería","Verdulería","Heladería","Librería","Ferretería","Zapatería","Juguetería","Perfumería",
+    "Ascensor","Escalera","Pasillo","Balcón","Terraza","Patio","Jardín","Parrilla","Pileta","Garaje",
+    "Campera","Buzo","Remera","Pantalón","Camisa","Campera","Zapatillas","Ojotas","Gorra","Bufanda",
+    "Computación","Programación","Código","Servidor","Base de datos","Internet","WiFi","Bluetooth","USB","Pantalla",
+    "Carpintería","Albañilería","Plomería","Gasista","Electricidad","Soldadura","Herramientas","Tornillo","Tuerca","Arandela",
+    "Vacaciones","Excursión","Campamento","Mochila","Carpa","Linterna","Fogón","Sendero","Mapa","Brújula",
+    "Streaming","YouTube","Netflix","Spotify","Podcast","Influencer","Suscriptores","Like","Comentario","Historia",
+    "Desayuno","Almuerzo","Cena","Merienda","Brunch","Picada","Parrillada","Hamburguesa","Sándwich","Ensalada",
+    "Semilla","Planta","Maceta","Regadera","Abono","Tierra","Pasto","Árbol","Flor","Cactus",
+    "Factura","Ticket","Recibo","Presupuesto","Impuesto","Descuento","Cuota","Interés","Crédito","Débito",
+    "Martes","Miércoles","Jueves","Viernes","Sábado","Domingo","Feriado","Agenda","Calendario","Horario",
+    "Candado","Llave","Puerta","Ventana","Cerradura","Persiana","Cortina","Mosquitero","Picaporte","Bisagra",
+    "Explorador","Pirata","Astronauta","Detective","Espía","Soldado","Bombero","Policía","Médico","Veterinario",
+    "Planeta","Galaxia","Satélite","Cohete","Órbita","Telescopio","Constelación","Cometa","Asteroide","Estrella",
+    "Teclado","Mouse","Monitor","Notebook","CPU","Memoria","Disco","Router","Servidor","Backup",
+    "Papelera","Archivador","Carpeta","Documento","Formulario","Contrato","Firma","Sello","Sobre","Correo",
+    "Camión","Tractor","Excavadora","Retroexcavadora","Grua","Hormigonera","Pala","Carretilla","Andamio","Nivel",
+    "Rompecabezas","Adivinanza","Truco","Póker","Dominó","Damas","Ludo","Dados","Tablero","Cartas",
+    "Mentira","Verdad","Secreto","Pista","Clave","Código","Sospecha","Coartada","Testigo","Juicio",
+    "Noticia","Titular","Crónica","Entrevista","Editorial","Radio","Diario","Revista","Portal","Blog",
+    "Velador","Lámpara","Foco","LED","Interruptor","Enchufe","Zapatilla","Extensión","Tablero","Térmica"
+
   ];
 
   // UI refs
@@ -159,6 +181,7 @@
   let current = 0;            // 0..N-1
   let revealed = false;       // si ya mostró rol al jugador actual
   let word = "";
+  let availableWords = [];
   let roles = []; // roles mezclados
   
   function randInt(min, maxInclusive) {
@@ -166,8 +189,20 @@
   }
 
   function pickWord() {
-    return WORDS[randInt(0, WORDS.length - 1)];
+  // Si no quedan palabras, reiniciar la bolsa
+  if (availableWords.length === 0) {
+    availableWords = [...WORDS];
+
+    // Mezclar palabras
+    for (let i = availableWords.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [availableWords[i], availableWords[j]] = [availableWords[j], availableWords[i]];
+    }
   }
+
+  // Sacar una palabra (no se repite)
+  return availableWords.pop();
+}
 
   function newRound() {
   current = 0;
@@ -257,6 +292,7 @@
       return;
     }
     N = val;
+    availableWords = [];
     newRound();
   });
 
@@ -269,16 +305,22 @@
   btnNext.addEventListener("click", nextPlayer);
 
   btnReset.addEventListener("click", () => {
+  const ok = confirm("¿Seguro que querés salir? Se perderá la ronda actual.");
+  if (ok) {
     showOnly("config");
-  });
+  }
+});
 
   btnNewRound.addEventListener("click", () => {
     newRound(); // misma cantidad de jugadores, nueva palabra e impostor
   });
 
   btnBackConfig.addEventListener("click", () => {
+  const ok = confirm("¿Seguro que querés volver? Se reiniciará la configuración.");
+  if (ok) {
     showOnly("config");
-  });
+  }
+});
 
   // Start on config
   showOnly("config");
