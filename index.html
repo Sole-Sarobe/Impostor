@@ -159,8 +159,8 @@
   let current = 0;            // 0..N-1
   let revealed = false;       // si ya mostró rol al jugador actual
   let word = "";
-  let impostorIndex = 0;
-
+  let roles = []; // roles mezclados
+  
   function randInt(min, maxInclusive) {
     return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
   }
@@ -170,15 +170,27 @@
   }
 
   function newRound() {
-    current = 0;
-    revealed = false;
-    word = pickWord();
-    impostorIndex = randInt(0, N - 1); // siempre aleatorio
-    updateRevealScreen();
-    btnHide.disabled = true;
-    btnNext.disabled = true;
-    showOnly("reveal");
+  current = 0;
+  revealed = false;
+
+  word = pickWord();
+
+  // Crear roles: 1 impostor + resto palabra
+  roles = Array(N).fill(word);
+  roles[0] = "IMPOSTOR";
+
+  // Mezclar roles (Fisher-Yates)
+  for (let i = roles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [roles[i], roles[j]] = [roles[j], roles[i]];
   }
+
+  updateRevealScreen();
+  btnHide.disabled = true;
+  btnNext.disabled = true;
+  showOnly("reveal");
+}
+
 
   function showOnly(which) {
     sConfig.style.display = (which === "config") ? "block" : "none";
@@ -201,7 +213,7 @@
     if (revealed) return;
     revealed = true;
 
-    const isImpostor = (current === impostorIndex);
+    const isImpostor = (roles[current] === "IMPOSTOR");
     if (isImpostor) {
       prompt.textContent = `Jugador ${current + 1}`;
       bigText.textContent = "SOS IMPOSTOR";
