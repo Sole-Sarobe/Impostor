@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>El Impostor (Local)</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0f19; color: #eaf0ff; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 18px; }
+    .card { background: #111a2e; border: 1px solid #223255; border-radius: 16px; padding: 16px; }
+    h1 { font-size: 22px; margin: 10px 0 14px; }
+    h2 { font-size: 18px; margin: 0 0 10px; }
+    p { margin: 10px 0; color: #c8d4f5; line-height: 1.35; }
+    label { display: block; margin: 12px 0 6px; color: #c8d4f5; font-weight: 600; }
+    input[type="number"]{
+      width: 100%; padding: 12px 12px; border-radius: 12px;
+      border: 1px solid #2a3b66; background: #0b1226; color: #eaf0ff;
+      font-size: 16px;
+    }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      border: 0; border-radius: 14px; padding: 14px 14px;
+      background: #2b67ff; color: white; font-weight: 800;
+      width: 100%; font-size: 16px;
+      cursor: pointer;
+    }
+    .btn.secondary { background: #233253; }
+    .btn.danger { background: #ff2b6a; }
+    .btn:active { transform: translateY(1px); }
+    .small { font-size: 13px; opacity: .9; }
+    .pill { display: inline-block; padding: 6px 10px; background: #0b1226; border: 1px solid #2a3b66; border-radius: 999px; }
+    .center { text-align: center; }
+    .big {
+      font-size: 34px; font-weight: 900; letter-spacing: .5px;
+      margin: 14px 0 6px;
+    }
+    .roleBox {
+      border-radius: 16px; padding: 18px; border: 1px solid #2a3b66;
+      background: radial-gradient(1200px 500px at 50% -50%, rgba(43,103,255,.35), transparent 60%), #0b1226;
+      min-height: 210px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .muted { color: #9bb0e6; }
+    .footer { margin-top: 12px; opacity: .85; }
+    .hr { height: 1px; background: #223255; margin: 14px 0; border-radius: 999px; }
+    .grid2 { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 3px 6px; border: 1px solid #2a3b66; border-radius: 8px; background: #0b1226; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>El Impostor 🕵️‍♂️ (local)</h1>
+
+      <!-- Pantalla: Config -->
+      <section id="screen-config">
+        <h2>Configurar ronda</h2>
+        <p class="small">Pasen el celu. Cada jugador revela su rol, lo oculta y se lo pasa al siguiente.</p>
+
+        <label for="players">Cantidad de jugadores</label>
+        <input id="players" type="number" min="3" max="20" value="5" />
+
+        <div class="hr"></div>
+
+        <button class="btn" id="btn-start">Empezar</button>
+
+        <p class="footer small muted">
+          Tip: en iPhone tocá <span class="kbd">Compartir</span> → <span class="kbd">Agregar a pantalla de inicio</span>.
+        </p>
+      </section>
+
+      <!-- Pantalla: Reveal -->
+      <section id="screen-reveal" style="display:none;">
+        <div class="row" style="justify-content:space-between;">
+          <div class="pill" id="round-info">Jugador 1 de 5</div>
+          <div class="pill" id="round-progress">0 vistos</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="roleBox center" id="roleBox">
+          <div class="muted" id="prompt">Jugador 1</div>
+          <div class="big" id="bigText">Tocá para revelar</div>
+          <p class="small muted" id="hint">Asegurate de que nadie más mire 👀</p>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid2">
+          <button class="btn secondary" id="btn-hide" disabled>Ocultar</button>
+          <button class="btn" id="btn-next" disabled>Pasar al siguiente</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <button class="btn danger" id="btn-reset">Reiniciar (volver al inicio)</button>
+      </section>
+
+      <!-- Pantalla: Fin -->
+      <section id="screen-done" style="display:none;">
+        <h2>Ronda lista ✅</h2>
+        <p class="small muted" id="done-text"></p>
+        <div class="hr"></div>
+        <button class="btn" id="btn-new-round">Nueva ronda (mismos jugadores)</button>
+        <div style="height:10px"></div>
+        <button class="btn secondary" id="btn-back-config">Cambiar jugadores</button>
+      </section>
+
+    </div>
+  </div>
+
+<script>
+(() => {
+  // Lista de palabras (variadas, sin categorías)
+  const WORDS = [
+    "Pizza","Helado","Asado","Empanadas","Mate","Café","Té","Chocolate","Pan","Torta",
+    "Playa","Montaña","Bosque","Desierto","Isla","Cataratas","Río","Lago","Ciudad","Pueblo",
+    "Fútbol","Tenis","Básquet","Natación","Running","Ciclismo","Boxeo","Yoga","Ajedrez","Cartas",
+    "Hospital","Escuela","Aeropuerto","Estación","Supermercado","Farmacia","Banco","Taller","Hotel","Restaurante",
+    "Martillo","Destornillador","Taladro","Sierra","Andamio","Generador","Hidrolavadora","Motobomba","Compactadora","Fratachadora",
+    "Perro","Gato","Caballo","Delfín","Tiburón","Águila","Pingüino","Elefante","Jirafa","Mono",
+    "Cine","Teatro","Concierto","Museo","Biblioteca","Parque","Plaza","Gimnasio","Cancha","Pileta",
+    "Auto","Camioneta","Moto","Bicicleta","Colectivo","Tren","Avión","Barco","Subte","Camión",
+    "Verano","Invierno","Otoño","Primavera","Lluvia","Nieve","Tormenta","Viento","Calor","Frío",
+    "Argentina","Brasil","Chile","Uruguay","México","España","Italia","Francia","Japón","Canadá",
+    "Computadora","Celular","Tablet","Televisión","Radio","Cámara","Reloj","Auriculares","Impresora","Router",
+    "Película","Serie","Libro","Comic","Videojuego","Canción","Banda","Actor","Directora","Podcast",
+    "Doctor","Enfermera","Profesor","Panadero","Mecánico","Programador","Diseñadora","Electricista","Arquitecto","Abogada",
+    "Semáforo","Puente","Ruta","Peaje","Rotonda","Estacionamiento","Parada","Terminal","Mapa","GPS"
+  ];
+
+  // UI refs
+  const sConfig = document.getElementById("screen-config");
+  const sReveal = document.getElementById("screen-reveal");
+  const sDone = document.getElementById("screen-done");
+
+  const playersInput = document.getElementById("players");
+  const btnStart = document.getElementById("btn-start");
+  const btnHide = document.getElementById("btn-hide");
+  const btnNext = document.getElementById("btn-next");
+  const btnReset = document.getElementById("btn-reset");
+
+  const roleBox = document.getElementById("roleBox");
+  const prompt = document.getElementById("prompt");
+  const bigText = document.getElementById("bigText");
+  const hint = document.getElementById("hint");
+
+  const roundInfo = document.getElementById("round-info");
+  const roundProgress = document.getElementById("round-progress");
+
+  const doneText = document.getElementById("done-text");
+  const btnNewRound = document.getElementById("btn-new-round");
+  const btnBackConfig = document.getElementById("btn-back-config");
+
+  // Game state
+  let N = 5;
+  let current = 0;            // 0..N-1
+  let revealed = false;       // si ya mostró rol al jugador actual
+  let word = "";
+  let impostorIndex = 0;
+
+  function randInt(min, maxInclusive) {
+    return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
+  }
+
+  function pickWord() {
+    return WORDS[randInt(0, WORDS.length - 1)];
+  }
+
+  function newRound() {
+    current = 0;
+    revealed = false;
+    word = pickWord();
+    impostorIndex = randInt(0, N - 1); // siempre aleatorio
+    updateRevealScreen();
+    btnHide.disabled = true;
+    btnNext.disabled = true;
+    showOnly("reveal");
+  }
+
+  function showOnly(which) {
+    sConfig.style.display = (which === "config") ? "block" : "none";
+    sReveal.style.display = (which === "reveal") ? "block" : "none";
+    sDone.style.display   = (which === "done")   ? "block" : "none";
+  }
+
+  function updateRevealScreen() {
+    const playerNumber = current + 1;
+    roundInfo.textContent = `Jugador ${playerNumber} de ${N}`;
+    roundProgress.textContent = `${current} vistos`;
+
+    prompt.textContent = `Jugador ${playerNumber}`;
+    bigText.textContent = "Tocá para revelar";
+    hint.textContent = "Asegurate de que nadie más mire 👀";
+    revealed = false;
+  }
+
+  function revealRole() {
+    if (revealed) return;
+    revealed = true;
+
+    const isImpostor = (current === impostorIndex);
+    if (isImpostor) {
+      prompt.textContent = `Jugador ${current + 1}`;
+      bigText.textContent = "SOS IMPOSTOR";
+      hint.textContent = "Hacete el/la distraído/a 😈";
+    } else {
+      prompt.textContent = `Jugador ${current + 1} — Tu palabra es:`;
+      bigText.textContent = word.toUpperCase();
+      hint.textContent = "Memorizala. Después ocultá y pasá el celu.";
+    }
+
+    btnHide.disabled = false;
+    btnNext.disabled = true;
+  }
+
+  function hideRole() {
+    if (!revealed) return;
+    bigText.textContent = "Rol oculto";
+    hint.textContent = "Ahora pasá el celu al siguiente jugador.";
+    btnHide.disabled = true;
+    btnNext.disabled = false;
+  }
+
+  function nextPlayer() {
+    if (current < N - 1) {
+      current += 1;
+      updateRevealScreen();
+      btnHide.disabled = true;
+      btnNext.disabled = true;
+    } else {
+      // Fin de ronda
+      doneText.textContent = `Listo: ${N - 1} jugadores tienen palabra y 1 es impostor. ¡A jugar!`;
+      showOnly("done");
+    }
+  }
+
+  // Events
+  btnStart.addEventListener("click", () => {
+    const val = Number(playersInput.value);
+    if (!Number.isFinite(val) || val < 3 || val > 20) {
+      alert("Elegí una cantidad de jugadores entre 3 y 20.");
+      return;
+    }
+    N = val;
+    newRound();
+  });
+
+  roleBox.addEventListener("click", () => {
+    // Tap-to-reveal: solo si aún no reveló
+    if (!revealed) revealRole();
+  });
+
+  btnHide.addEventListener("click", hideRole);
+  btnNext.addEventListener("click", nextPlayer);
+
+  btnReset.addEventListener("click", () => {
+    showOnly("config");
+  });
+
+  btnNewRound.addEventListener("click", () => {
+    newRound(); // misma cantidad de jugadores, nueva palabra e impostor
+  });
+
+  btnBackConfig.addEventListener("click", () => {
+    showOnly("config");
+  });
+
+  // Start on config
+  showOnly("config");
+})();
+</script>
+</body>
+</html>
